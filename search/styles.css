@@ -1,0 +1,80 @@
+.links{
+    float: right;  
+    color: black;
+    display: block;
+    margin: 10px;
+}
+
+.nav-item{
+    margin: 10px;
+}
+
+#main-content { 
+    text-align: center; 
+    margin-top: 20px;
+}
+
+.form-control {
+    margin: 10px;
+   
+  }
+
+#rounded{
+    border-radius: 30px;
+    margin: 0;
+    margin-bottom: 12px;
+  }
+
+#small-logo{
+    position: left ;
+    float: left;
+    height: 30px;
+    width:  80px;
+}
+
+
+#icon{
+    height: 30px;
+    margin: 0;
+    margin-top: 23px;
+}
+
+.input-group{
+    text-align:center;
+}
+
+h5{
+    color: red;
+    margin: 20px;
+    margin-left: 40px;
+}
+
+p{
+    margin: 20px;
+    margin-left: 40px;
+
+}
+
+#advance-disc{
+    padding: 12px;
+    font-size: small;
+
+}
+
+#advance-head{
+    font-size:medium;
+    font-weight: bold;
+
+}
+
+#advance-right-head{
+    font-size:medium;
+    font-weight: bold;
+    color: rgb(86, 85, 85);
+
+}
+
+.form-row{
+    margin-left: 30px;
+}
+
