@@ -1,0 +1,15 @@
+{% extends "encyclopedia/layout.html" %}
+
+{% block body %}
+    <h1>{{title}} is not found Opps</h1>
+    <br>
+    <h4>Similar Topics</h4>
+    <ul>
+    {% for topic in similar_topics %}
+        <li><a href="{% url 'wiki:title' title=topic %}">{{topic}}</a></li>
+    {% empty %}
+        <li> No similar topics </li>
+
+    {% endfor %}
+    </ul>
+{% endblock %}
