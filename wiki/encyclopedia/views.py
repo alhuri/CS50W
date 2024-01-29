@@ -106,8 +106,6 @@ def save_changes(request):
             })
 
 
-
-
 def title(request,title):
 
     content= markdown2.markdown(util.get_entry(title))  
