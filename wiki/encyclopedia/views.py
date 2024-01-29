@@ -5,6 +5,8 @@ from django.urls import reverse
 from . import util
 import logging
 import random
+import markdown2
+from markdown2 import Markdown
 
 logger = logging.getLogger("encyclopedia.views")
 
@@ -70,40 +72,45 @@ def new_page(request):
         "form": form
     })
 
-def random_page(request):  
-    topic_list = util.list_entries()
-    random_topic = random.choice(topic_list)
-    return title(request,random_topic)
+def random_page(request):
 
-def save(request):   
-    return render(request, "encyclopedia/random_page.html")
+    return title(request,random.choice(util.list_entries()))
+
 
 def edit(request, title):
-
     if request.method == "GET":
         content = util.get_entry(title)
         pre_populated_form= NewTextArea(initial={'title': title, 'content': content})
-
         return render(request, "encyclopedia/edit.html", {  
             "pre_populated_form":pre_populated_form,
             "form": form 
         }) 
-    else:
-        content = request.POST.get("content")
-        if content == "":
-            return render(request, "encyclopedia/error.html", {
-                    "title": title,
-                    "error": "Empty content try again",
-                    "form":form
-                })
-        else:
-            util.save_entry(title, content)
-            return redirect("title", title=title)
 
+
+
+def save_changes(request):
     
+    if request.method == "POST":
+        content_form = NewTextArea(request.POST)
+        if content_form.is_valid():
+            title = content_form.cleaned_data["title"].lower()
+            content = content_form.cleaned_data["content"]
+
+            util.save_entry(title,content)
+            content= markdown2.markdown(util.get_entry(title))  
+
+            return render(request, "encyclopedia/title.html", {
+                    "title": title,
+                    "content": content,
+                    "form":form
+            })
+
+
+
+
 def title(request,title):
-    
-    content = util.get_entry(title)
+
+    content= markdown2.markdown(util.get_entry(title))  
 
     if content is None:
         return render(request,"encyclopedia/not_found.html",{
