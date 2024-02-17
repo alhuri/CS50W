@@ -1,7 +1,7 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h2>Active Listings</h2>
+<h2>Watchlist</h2>
 
 
 <div class="container">
@@ -18,14 +18,13 @@
                     </div>
                     <ul class="list-group list-group-flush">
                       <li class="list-group-item">Price: ${{ active_list.start_price }}</li>
+                      <!-- <li class="list-group-item">Dapibus ac facilisis in</li> -->
                     </ul>
                     <div class="card-body">
                       <a href="{% url 'item' id=active_list.id %}" class="card-link">Details</a>                      
-                      <a href="{% url 'watch_list' id=active_list.id %}" value="add" class="card-link">Add to watchlist</a>
+                      <a href="#" class="card-link">Remove</a>
                     </div>
                   </div>
-
-
             </div>
         {% endfor %}
     </div>

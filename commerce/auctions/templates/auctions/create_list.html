@@ -1,0 +1,13 @@
+{% extends "auctions/layout.html" %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %} 
+
+{% block body %}
+<form action="{% url 'add_list' %}" method="post" novalidate>
+    {% csrf_token %}
+    {{form}}
+        <button type="submit" class="btn btn-success">Add</button>
+</form>
+
+   
+{% endblock %}
