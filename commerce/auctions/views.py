@@ -20,8 +20,10 @@ class AuctionForm(forms.Form):
     category = forms.ChoiceField(choices = CHOICES)
 
 class BidForm(forms.Form):
-    bid = forms.DecimalField()
-
+    bid = forms.DecimalField(
+    widget= forms.TextInput
+    (attrs={'placeholder':'bid','style':'margin-bottom:2px;'}),
+    label='')
 
 auction_form = AuctionForm()
 bid_form = BidForm()
@@ -39,28 +41,27 @@ def place_bid(request,auction_id):
             # Process the data in form.cleaned_data
             bid = form.cleaned_data["bid"]
 
-            Auction = Auction.objects.get(pk=auction_id)
+            auction = Auction.objects.get(pk=auction_id)
+            if auction.bid is not None:
+                if bid < auction.bid and bid < auction.start_price: 
+                    return render(request, "auctions/error.html",{
+                    "msg": "The Bid Is lower the the Last Bid!"
+                })
 
+            else:
+                bid = Bid(
+                    bidder = User.objects.get(pk=request.user.id),
+                    bid = bid
+                    )
+                bid.save()
 
-            bid = Bid(
-                bidder = User.objects.get(pk=request.user.id),
-                bid = bid
-            )
-            bid.save()
+                auction.bid = bid
 
-            return render(request, "auctions/item.html",{
-                "item": auction
-            })
+                return render(request, "auctions/item.html",{
+                    'item': auction,
+                    'form': bid_form
+                    })
         
-        return render(request, "auctions/create_list.html",{
-            'form': auction_form
-        })
-
-    else:
-
-        return render(request, "auctions/create_list.html",{
-            'form': auction_form
-        })
 
 
 def login_view(request):
@@ -88,7 +89,8 @@ def login_view(request):
 def item(request,id):
     item = Auction.objects.get(pk=id)
     return render(request, "auctions/item.html",{
-        "item": item
+        'item': item,
+        'form' : bid_form
         })
 
 def create_list(request):
