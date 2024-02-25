@@ -3,25 +3,24 @@
 {% block body %}
 <h2>Watchlist</h2>
 
-
 <div class="container">
     <div class="row">
-       {% for active_list in active_listings %}
+       {% for item in list %}
         {% if forloop.counter0|divisibleby:2 and not forloop.first %}<div class="w-100"></div>{% endif %}
             <div class="col-md-auto">
                 
                 <div class="card" style="width: 18rem;">
-                    <img src="{{active_list.image}}" class="card-img-top" alt="...">
+                    <img src="{{item.image}}" class="card-img-top" alt="...">
                     <div class="card-body">
-                      <h5 class="card-title">{{ active_list.title }}</h5>
-                      <p class="card-text">{{ active_list.description }}</p>
+                      <h5 class="card-title">{{ item.title }}</h5>
+                      <p class="card-text">{{ item.description }}</p>
                     </div>
                     <ul class="list-group list-group-flush">
-                      <li class="list-group-item">Price: ${{ active_list.start_price }}</li>
+                      <li class="list-group-item">Price: ${{ item.start_price }}</li>
                       <!-- <li class="list-group-item">Dapibus ac facilisis in</li> -->
                     </ul>
                     <div class="card-body">
-                      <a href="{% url 'item' id=active_list.id %}" class="card-link">Details</a>                      
+                      <a href="{% url 'item' id=item.id %}" class="card-link">Details</a>                      
                       <a href="#" class="card-link">Remove</a>
                     </div>
                   </div>

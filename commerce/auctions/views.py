@@ -3,10 +3,11 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-from .models import User, Category, Auction,watchList
+from .models import User, Category, Auction, watchList, Bid
 from django.views.generic import CreateView
 from django import forms
 from django.forms import formset_factory
+from django.shortcuts import get_object_or_404
 
 
 CHOICES = Category.objects.values_list()
@@ -15,17 +16,74 @@ class AuctionForm(forms.Form):
     title = forms.CharField(max_length=32)
     description = forms.CharField(max_length=255, widget=forms.Textarea)
     start_price = forms.DecimalField()
-    image = forms.URLField(label="Image URL", initial="http://", required=False)
+    image = forms.URLField(label="Image URL", required=False)
     category = forms.ChoiceField(choices = CHOICES)
 
-auction_form = AuctionForm()
+class BidForm(forms.Form):
+    bid = forms.DecimalField()
 
+
+auction_form = AuctionForm()
+bid_form = BidForm()
 
 def index(request):
     active = Auction.objects.filter(status=True)
     return render(request, "auctions/index.html",{
         "active_listings": active
         })
+
+def place_bid(request,auction_id):
+    if request.method == 'POST': # If the form has been submitted
+        form = BidForm(request.POST) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass
+            # Process the data in form.cleaned_data
+            bid = form.cleaned_data["bid"]
+
+            Auction = Auction.objects.get(pk=auction_id)
+
+
+            bid = Bid(
+                bidder = User.objects.get(pk=request.user.id),
+                bid = bid
+            )
+            bid.save()
+
+            return render(request, "auctions/item.html",{
+                "item": auction
+            })
+        
+        return render(request, "auctions/create_list.html",{
+            'form': auction_form
+        })
+
+    else:
+
+        return render(request, "auctions/create_list.html",{
+            'form': auction_form
+        })
+
+
+def login_view(request):
+    if request.method == "POST":
+
+        # Attempt to sign user in
+        username = request.POST["username"]
+        password = request.POST["password"]
+        user = authenticate(request, username=username, password=password)
+
+        # Check if authentication successful
+        if user is not None:
+            login(request, user)
+            return HttpResponseRedirect(reverse("index"))
+        else:
+            return render(request, "auctions/login.html", {
+                "message": "Invalid username and/or password."
+            })
+    else:
+        return render(request, "auctions/login.html")
+
+
+
 
 def item(request,id):
     item = Auction.objects.get(pk=id)
@@ -40,18 +98,36 @@ def create_list(request):
 
 def watch_list(request, id):
     auction = Auction.objects.get(pk=id)
+    if watchList.objects.filter(watcher = request.user.id, auction = auction).exists():
+        return render(request, "auctions/error.html",{
+                "msg": "Product Already Added!"
+            })
 
-    watchlist = watchList(
+    else:
+        watchlist = watchList(
                 watcher = User.objects.get(pk=request.user.id),
                 auction = auction
             )
-    watchlist.save()
+        watchlist.save()
 
-    list = watchList.objects.get(pk=request.user.id)
-    
-    return render(request, "auctions/watch_list.html",{
-        "active_listings": list
+        return render(request, "auctions/watch_listing.html",{
+                "active_listings": watchList.objects.filter(watcher_id=request.user.id)
+            })
+
+def remove_item_watch_list(request, auction):
+    watchlist = watchList.objects.filter(watcher=request.user.id, auction=auction)
+    watchlist.delete()
+    return render(request, "auctions/watch_listing.html",{
+            "active_listings": watchList.objects.filter(watcher_id=request.user.id)
         })
+
+def watch_listing(request):
+    return render(request, "auctions/watch_listing.html",{
+            "active_listings": watchList.objects.filter(watcher_id=request.user.id)
+        })
+
+
+
 
 def add_list(request):
     if request.method == 'POST': # If the form has been submitted
@@ -63,6 +139,9 @@ def add_list(request):
             start_price = form.cleaned_data["start_price"]
             category = form.cleaned_data["category"]
             image = form.cleaned_data["image"]
+
+            if image == None:
+                image="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTelVna9__Qwt9GifGdE0R4FmsiTmZjoSE1vnC4LXdgozvqbjiOGufuXrladHL7nXowTt4&usqp=CAU"
 
             category = Category.objects.get(pk=category)
 

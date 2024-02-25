@@ -1,0 +1,35 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Watch Listings</h2>
+
+
+<div class="container">
+    <div class="row">
+       {% for active_list in active_listings %}
+        {% if forloop.counter0|divisibleby:2 and not forloop.first %}<div class="w-100"></div>{% endif %}
+            <div class="col-md-auto">
+                
+                <div class="card" style="width: 18rem;">
+                    <img src="{{active_list.auction.image}}" class="card-img-top" alt="...">
+                    <div class="card-body">
+                      <h5 class="card-title">{{ active_list.auction.title }}</h5>
+                      <p class="card-text">{{ active_list.auction.description }}</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item">Price: ${{ active_list.auction.start_price }}</li>
+                    </ul>
+                    <div class="card-body">
+                      <a href="{% url 'item' id=active_list.auction.id %}" class="card-link">Details</a>                      
+                      <a href="{% url 'remove_item_watch_list' auction=active_list.auction.id %}" value="add" class="card-link">Remove</a>
+                    </div>
+                  </div>
+
+
+            </div>
+        {% endfor %}
+    </div>
+</div>
+        
+
+{% endblock %}
