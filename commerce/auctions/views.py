@@ -3,7 +3,7 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-from .models import User, Category, Auction, watchList, Bid
+from .models import User, Category, Auction, watchList, Bid, Comment
 from django.views.generic import CreateView
 from django import forms
 from django.forms import formset_factory
@@ -15,9 +15,14 @@ CHOICES = Category.objects.values_list()
 class AuctionForm(forms.Form):
     title = forms.CharField(max_length=32)
     description = forms.CharField(max_length=255, widget=forms.Textarea)
-    start_price = forms.DecimalField()
+    start_price = forms.DecimalField(max_digits=8)
     image = forms.URLField(label="Image URL", required=False)
     category = forms.ChoiceField(choices = CHOICES)
+
+class CommentForm(forms.Form):
+    comment = forms.CharField(max_length=255, widget= forms.TextInput
+    (attrs={'placeholder':'comment','class': 'commentForm'}),
+    label='')
 
 class BidForm(forms.Form):
     bid = forms.DecimalField(
@@ -25,6 +30,7 @@ class BidForm(forms.Form):
     (attrs={'placeholder':'bid','style':'margin-bottom:2px;'}),
     label='')
 
+comment_form = CommentForm()
 auction_form = AuctionForm()
 bid_form = BidForm()
 
@@ -42,28 +48,31 @@ def place_bid(request,auction_id):
             bid = form.cleaned_data["bid"]
 
             auction = Auction.objects.get(pk=auction_id)
-            if auction.bid is not None:
-                if bid < auction.bid and bid < auction.start_price: 
-                    return render(request, "auctions/error.html",{
-                    "msg": "The Bid Is lower the the Last Bid!"
+            comments = Comment.objects.filter(auction=auction)
+            bid_object = Bid.objects.filter(auction=auction_id)
+            highest_bid = Bid.objects.filter(auction=auction_id).order_by('-bid').first()
+
+            if bid < highest_bid.bid or bid < auction.start_price: 
+                return render(request, "auctions/error.html",{
+                    "msg": "The bid Is lower the the last bid!"
                 })
 
             else:
-                bid = Bid(
+                new_bid = Bid(
                     bidder = User.objects.get(pk=request.user.id),
-                    bid = bid
+                    bid = bid,
+                    auction = auction
                     )
-                bid.save()
-
-                auction.bid = bid
+                new_bid.save()
 
                 return render(request, "auctions/item.html",{
                     'item': auction,
-                    'form': bid_form
+                    'bid' : highest_bid.bid,
+                    'comments' : comments,
+                    'bid_form' : BidForm(),
+                    'comment_form' : comment_form
                     })
         
-
-
 def login_view(request):
     if request.method == "POST":
 
@@ -83,14 +92,39 @@ def login_view(request):
     else:
         return render(request, "auctions/login.html")
 
+def item(request,auction_id):
+    auction = Auction.objects.get(pk=auction_id)
+
+    if auction.status == False:
+        highest_bid = Bid.objects.filter(auction=auction_id).order_by('-bid').first()
+        return render(request, "auctions/close.html",{
+        'item': auction,
+        'bid' : highest_bid,
+        })
+
+    else:
+        comments = Comment.objects.filter(auction=auction)
+        highest_bid = Bid.objects.filter(auction=auction_id).order_by('-bid').first()
 
 
+        return render(request, "auctions/item.html",{
+            'item': auction,
+            'bid' : highest_bid.bid,
+            'comments' : comments,
+            'bid_form' : BidForm(),
+            'comment_form' : comment_form
+            })
 
-def item(request,id):
-    item = Auction.objects.get(pk=id)
-    return render(request, "auctions/item.html",{
-        'item': item,
-        'form' : bid_form
+def close(request,auction_id):
+    auction = Auction.objects.get(pk=auction_id)
+    auction.status= False
+    auction.save()
+    highest_bid = Bid.objects.filter(auction=auction_id).order_by('-bid').first()
+
+
+    return render(request, "auctions/close.html",{
+        'item': auction,
+        'bid' : highest_bid,
         })
 
 def create_list(request):
@@ -128,9 +162,6 @@ def watch_listing(request):
             "active_listings": watchList.objects.filter(watcher_id=request.user.id)
         })
 
-
-
-
 def add_list(request):
     if request.method == 'POST': # If the form has been submitted
         form = AuctionForm(request.POST) # A form bound to the POST data
@@ -158,9 +189,19 @@ def add_list(request):
             )
             auction.save()
 
+            auction = Auction.objects.get(pk=id)
+            comments = Comment.objects.filter(auction=auction)
+            highest_bid = Bid.objects.filter(auction=auction_id).order_by('-bid').first()
+
+
+
             return render(request, "auctions/item.html",{
-                "item": auction
-            })
+                'item': auction,
+                'bid' : highest_bid.bid,
+                'comments' : comments,
+                'bid_form' : BidForm(),
+                'comment_form' : comment_form
+                })
         
         return render(request, "auctions/create_list.html",{
             'form': auction_form
@@ -171,7 +212,6 @@ def add_list(request):
         return render(request, "auctions/create_list.html",{
             'form': auction_form
         })
-
 
 def login_view(request):
     if request.method == "POST":
@@ -192,11 +232,9 @@ def login_view(request):
     else:
         return render(request, "auctions/login.html")
 
-
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
-
 
 def register(request):
     if request.method == "POST":
@@ -223,7 +261,6 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
-
 
 def category(request):
     return render(request, "auctions/category.html", {

@@ -1,0 +1,7 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+<h1>Closed Auction!</h1>
+<h3>{{ auction.title }} It is won by {{bid.bidder}} who offered ${{ bid.bid }} </h3>
+
+{% endblock %}

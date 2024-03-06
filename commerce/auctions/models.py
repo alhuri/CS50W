@@ -26,15 +26,15 @@ class Auction(models.Model):
         return f"{self.title}: {self.description} belongs to {self.category} starting with {self.start_price}"
     
 class Bid(models.Model):
-    bid = models.DecimalField(decimal_places=2,max_digits=13, blank=True,default=0)
+    bid = models.DecimalField(decimal_places=2,max_digits=13)
     bidder = models.ForeignKey(User, on_delete=models.CASCADE)
-    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name="biddings", blank=True, null=True)
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name="biddings")
 
 
     def __str__(self):
-        return f'{self.bid}$ by {self.bidder}'
+        return f'${self.bid} by {self.bidder}'
         
-        
+
 class Comment(models.Model):
     content = models.TextField()
     commentor = models.ForeignKey(User, on_delete=models.CASCADE)
