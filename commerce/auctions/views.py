@@ -162,6 +162,43 @@ def watch_listing(request):
             "active_listings": watchList.objects.filter(watcher_id=request.user.id)
         })
 
+def comment(request, auction_id):
+    if request.method == 'POST': # If the form has been submitted
+        form = CommentForm(request.POST) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass
+            # Process the data in form.cleaned_data
+            comment = form.cleaned_data["comment"]
+
+            comment = Comment(
+                commentor = User.objects.get(pk=request.user.id),
+                content = comment,
+                auction = Auction.objects.get(pk=auction_id)
+            )
+            comment.save()
+
+            auction = Auction.objects.get(pk=auction_id)
+            comments = Comment.objects.filter(auction=auction)
+            highest_bid = Bid.objects.filter(auction=auction_id).order_by('-bid').first()
+
+
+            return render(request, "auctions/item.html",{
+                'item': auction,
+                'bid' : highest_bid.bid,
+                'comments' : comments,
+                'bid_form' : BidForm(),
+                'comment_form' : comment_form
+                })
+
+    else:
+
+        return render(request, "auctions/item.html",{
+                'item': auction,
+                'bid' : highest_bid.bid,
+                'comments' : comments,
+                'bid_form' : BidForm(),
+                'comment_form' : comment_form
+                })
+
 def add_list(request):
     if request.method == 'POST': # If the form has been submitted
         form = AuctionForm(request.POST) # A form bound to the POST data
