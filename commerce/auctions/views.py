@@ -17,7 +17,7 @@ class AuctionForm(forms.Form):
     category = forms.ChoiceField(choices = CHOICES, widget=forms.Select(attrs={'style': 'height: 40px; width: 500px;' ,'class': 'form-control'}))
     start_price = forms.DecimalField(max_digits=8, widget=forms.NumberInput(attrs={'style': 'height: 40px; width: 500px;' ,'class': 'form-control'}))
     image = forms.URLField(label="Image URL", required=False , widget=forms.TextInput(attrs={'style': 'height: 40px; width: 500px;' ,'class': 'form-control'}))
-    description = forms.CharField(max_length=255, widget=forms.Textarea(attrs={'style': 'height: 100px; width: 500px;' ,'class': 'form-control'}))
+    description = forms.CharField(max_length=32, widget=forms.Textarea(attrs={'style': 'height: 100px; width: 500px; margin-bottom: 10px;' ,'class': 'form-control'}))
 
 class CommentForm(forms.Form):
     comment = forms.CharField(max_length=255, widget= forms.TextInput
@@ -49,21 +49,20 @@ def place_bid(request,auction_id):
 
             auction = Auction.objects.get(pk=auction_id)
             comments = Comment.objects.filter(auction=auction)
-            bid_object = Bid.objects.filter(auction=auction_id)
             highest_bid = Bid.objects.filter(auction=auction_id).order_by('-bid').first()
 
             if bid < highest_bid.bid or bid < auction.start_price: 
                 return render(request, "auctions/error.html",{
                     "msg": "The bid Is lower the the last bid!"
-                })
-
+                    })
             else:
                 new_bid = Bid(
-                    bidder = User.objects.get(pk=request.user.id),
-                    bid = bid,
-                    auction = auction
-                    )
+                        bidder = User.objects.get(pk=request.user.id),
+                        bid = bid,
+                        auction = auction
+                        )
                 new_bid.save()
+                highest_bid = Bid.objects.filter(auction=auction_id).order_by('-bid').first()
 
                 return render(request, "auctions/item.html",{
                     'item': auction,
@@ -105,7 +104,6 @@ def item(request,auction_id):
     else:
         comments = Comment.objects.filter(auction=auction)
         highest_bid = Bid.objects.filter(auction=auction_id).order_by('-bid').first()
-
 
         return render(request, "auctions/item.html",{
             'item': auction,
@@ -215,6 +213,8 @@ def add_list(request):
             start_price = form.cleaned_data["start_price"]
             category = form.cleaned_data["category"]
             image = form.cleaned_data["image"]
+            bid = form.cleaned_data["start_price"]
+            bidder = User.objects.get(pk=request.user.id)
 
             if image == None:
                 image="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTelVna9__Qwt9GifGdE0R4FmsiTmZjoSE1vnC4LXdgozvqbjiOGufuXrladHL7nXowTt4&usqp=CAU"
@@ -222,7 +222,7 @@ def add_list(request):
             category = Category.objects.get(pk=category)
 
 
-            auction = Auction(
+            auction_object = Auction(
                 publisher = User.objects.get(pk=request.user.id),
                 title = title,
                 description = description,
@@ -230,13 +230,17 @@ def add_list(request):
                 category = category,
                 image = image
             )
-            auction.save()
+            auction_object.save()
 
-            auction = Auction.objects.get(pk=id)
-            comments = Comment.objects.filter(auction=auction)
-            highest_bid = Bid.objects.filter(auction=auction_id).order_by('-bid').first()
+            bid_object = bid(
+                bidder = bidder,
+                bid = bid
+            )
+            bid_object.save()
 
-
+            auction = Auction.objects.get(pk=auction_object.id)
+            comments = Comment.objects.filter(auction=auction_object)
+            highest_bid = Bid.objects.filter(auction=auction_object.id).order_by('-bid').first()
 
             return render(request, "auctions/item.html",{
                 'item': auction,

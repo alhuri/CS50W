@@ -7,7 +7,7 @@
 <div class="container">
     <div class="row">
        {% for active_list in active_listings %}
-        {% if forloop.counter0|divisibleby:2 and not forloop.first %}<div class="w-100"></div>{% endif %}
+        {% if forloop.counter0|divisibleby:3 and not forloop.first %}<div class="w-100"></div>{% endif %}
             <div class="col-md-auto">
                 
                 <div class="card" style="width: 18rem;">
