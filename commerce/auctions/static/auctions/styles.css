@@ -31,7 +31,8 @@ body {
     color: #728299!important;
 }
 
-.commentForm{
-    height: 200px;
-    width: 300px;
+.btn-primary-spacing 
+{
+margin-right: 5px;
+margin-bottom: 5px !important;
 }

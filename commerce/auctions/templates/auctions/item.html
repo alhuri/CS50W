@@ -1,4 +1,3 @@
-
 {% extends "auctions/layout.html" %}
 
 {% block body %}
@@ -89,20 +88,27 @@
                                 </div>
                         </div>
                     </li>
-
                     {% endfor %}
                 </ul>
             </div>
         </div>
     </div>
 </div>
+ </div>
 
-                </div>
-                <form action="{% url 'comment' auction_id=item.id %}" method="post">
-                    {% csrf_token %}
-                    {{comment_form}}
-                    <button class="btn btn-primary btn-rounded">Send</button>
-                </form>
+                {% if user.is_authenticated %}
+
+                        <form action="{% url 'comment' auction_id=item.id %}" method="post">
+                            {% csrf_token %}
+                            {{comment_form}}
+                        
+                            <div class="col-sm-1 col-xs-1 col-md-1 col-lg-1">
+                                <button type="submit" class="btn btn-success col-xs-2"" class="comment_button">Send</button>
+                            </div>
+                        </form>
+
+                {% endif %}
+                
             </div>
         </div>
     </div>

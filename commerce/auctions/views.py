@@ -8,6 +8,7 @@ from django.views.generic import CreateView
 from django import forms
 from django.forms import formset_factory
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
 
 
 CHOICES = Category.objects.values_list()
@@ -21,7 +22,7 @@ class AuctionForm(forms.Form):
 
 class CommentForm(forms.Form):
     comment = forms.CharField(max_length=255, widget= forms.TextInput
-    (attrs={'placeholder':'comment', 'style': 'height: 100px; width: 500px; margin: 10px;','class': 'form-control'}),
+    (attrs={'style': 'height: 100px; width: 500px; margin: 15px;','class': 'form-control'}),
     label='')
 
 class BidForm(forms.Form):
@@ -40,6 +41,7 @@ def index(request):
         "active_listings": active
         })
 
+@login_required
 def place_bid(request,auction_id):
     if request.method == 'POST': # If the form has been submitted
         form = BidForm(request.POST) # A form bound to the POST data
@@ -113,6 +115,7 @@ def item(request,auction_id):
             'comment_form' : comment_form
             })
 
+@login_required
 def close(request,auction_id):
     auction = Auction.objects.get(pk=auction_id)
     auction.status= False
@@ -125,11 +128,13 @@ def close(request,auction_id):
         'bid' : highest_bid,
         })
 
+@login_required
 def create_list(request):
     return render(request, "auctions/create_list.html",{
         'form': auction_form
     })
 
+@login_required
 def watch_list(request, id):
     auction = Auction.objects.get(pk=id)
     if watchList.objects.filter(watcher = request.user.id, auction = auction).exists():
@@ -147,7 +152,8 @@ def watch_list(request, id):
         return render(request, "auctions/watch_listing.html",{
                 "active_listings": watchList.objects.filter(watcher_id=request.user.id)
             })
-
+    
+@login_required
 def remove_item_watch_list(request, auction):
     watchlist = watchList.objects.filter(watcher=request.user.id, auction=auction)
     watchlist.delete()
@@ -165,7 +171,8 @@ def watch_listing(request):
         return render(request, "auctions/error.html",{
                 "msg": "Empty!"
             })
-
+    
+@login_required
 def comment(request, auction_id):
     if request.method == 'POST': # If the form has been submitted
         form = CommentForm(request.POST) # A form bound to the POST data
@@ -184,17 +191,9 @@ def comment(request, auction_id):
             comments = Comment.objects.filter(auction=auction)
             highest_bid = Bid.objects.filter(auction=auction_id).order_by('-bid').first()
 
-
-            return render(request, "auctions/item.html",{
-                'item': auction,
-                'bid' : highest_bid.bid,
-                'comments' : comments,
-                'bid_form' : BidForm(),
-                'comment_form' : comment_form
-                })
-
+            return HttpResponseRedirect(reverse("item", args=[auction_id]))
+        
     else:
-
         return render(request, "auctions/item.html",{
                 'item': auction,
                 'bid' : highest_bid.bid,
@@ -202,7 +201,7 @@ def comment(request, auction_id):
                 'bid_form' : BidForm(),
                 'comment_form' : comment_form
                 })
-
+@login_required
 def add_list(request):
     if request.method == 'POST': # If the form has been submitted
         form = AuctionForm(request.POST) # A form bound to the POST data
@@ -232,9 +231,10 @@ def add_list(request):
             )
             auction_object.save()
 
-            bid_object = bid(
+            bid_object = Bid(
                 bidder = bidder,
-                bid = bid
+                bid = bid,
+                auction = auction_object
             )
             bid_object.save()
 

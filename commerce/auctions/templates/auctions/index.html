@@ -20,9 +20,11 @@
                       <li class="list-group-item">Price: ${{ active_list.start_price }}</li>
                     </ul>
                     <div class="card-body">
-                      <a href="{% url 'item' auction_id=active_list.id %}" class="card-link">Details</a>                      
-                      <a href="{% url 'watch_list' id=active_list.id %}" value="add" class="card-link">Add to watchlist</a>
-                    </div>
+                      <a href="{% url 'item' auction_id=active_list.id %}" class="card-link">Details</a>  
+                      {% if user.is_authenticated %}                    
+                        <a href="{% url 'watch_list' id=active_list.id %}" value="add" class="card-link">Add to watchlist</a>
+                      {% endif %}
+                     </div>
                   </div>
             </div>
         {% endfor %}
