@@ -13,15 +13,15 @@ from django.shortcuts import get_object_or_404
 CHOICES = Category.objects.values_list()
 
 class AuctionForm(forms.Form):
-    title = forms.CharField(max_length=32)
-    description = forms.CharField(max_length=255, widget=forms.Textarea)
-    start_price = forms.DecimalField(max_digits=8)
-    image = forms.URLField(label="Image URL", required=False)
-    category = forms.ChoiceField(choices = CHOICES)
+    title = forms.CharField(max_length=32, widget=forms.TextInput(attrs={'style': 'height: 40px; width: 500px;' ,'class': 'form-control'}))
+    category = forms.ChoiceField(choices = CHOICES, widget=forms.Select(attrs={'style': 'height: 40px; width: 500px;' ,'class': 'form-control'}))
+    start_price = forms.DecimalField(max_digits=8, widget=forms.NumberInput(attrs={'style': 'height: 40px; width: 500px;' ,'class': 'form-control'}))
+    image = forms.URLField(label="Image URL", required=False , widget=forms.TextInput(attrs={'style': 'height: 40px; width: 500px;' ,'class': 'form-control'}))
+    description = forms.CharField(max_length=255, widget=forms.Textarea(attrs={'style': 'height: 100px; width: 500px;' ,'class': 'form-control'}))
 
 class CommentForm(forms.Form):
     comment = forms.CharField(max_length=255, widget= forms.TextInput
-    (attrs={'placeholder':'comment','class': 'commentForm'}),
+    (attrs={'placeholder':'comment', 'style': 'height: 100px; width: 500px; margin: 10px;','class': 'form-control'}),
     label='')
 
 class BidForm(forms.Form):
@@ -158,9 +158,15 @@ def remove_item_watch_list(request, auction):
         })
 
 def watch_listing(request):
-    return render(request, "auctions/watch_listing.html",{
-            "active_listings": watchList.objects.filter(watcher_id=request.user.id)
-        })
+    watch = watchList.objects.filter(watcher_id=request.user.id)
+    if watch != None:
+        return render(request, "auctions/watch_listing.html",{
+                "active_listings": watch
+            })
+    else:
+        return render(request, "auctions/error.html",{
+                "msg": "Empty!"
+            })
 
 def comment(request, auction_id):
     if request.method == 'POST': # If the form has been submitted

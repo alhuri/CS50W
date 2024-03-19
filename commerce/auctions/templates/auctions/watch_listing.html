@@ -20,9 +20,10 @@
                       <li class="list-group-item">Price: ${{ active_list.auction.start_price }}</li>
                     </ul>
                     <div class="card-body">
-                      <a href="{% url 'item' id=active_list.auction.id %}" class="card-link">Details</a>                      
+                      <a href="{% url 'item' auction_id=active_list.auction.id %}" class="card-link">Details</a>                      
                       <a href="{% url 'remove_item_watch_list' auction=active_list.auction.id %}" value="add" class="card-link">Remove</a>
                     </div>
+
                   </div>
 
 
